@@ -6,7 +6,7 @@ CPU=$1
 MEM=$2
 DISK=$3
 NODES=$4
-arch=x86_64
+arch=i386
 
 # Perhaps make this always recreate the nodes for repeatability?
 $BASE/scripts/register-nodes $CPU $MEM $DISK $NODES
