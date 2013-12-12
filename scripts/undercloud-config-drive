@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -eux
+
+BASE=$(dirname $0)/../
+
+ISO_BUILD_DIR=$(mktemp -d)
+
+mkdir -p $ISO_BUILD_DIR/openstack/latest
+mkdir -p $ISO_BUILD_DIR/openstack/content
+
+ssh-keygen -t rsa -f $ISO_BUILD_DIR/openstack/content/virtual-power-key \
+    -N '' -C 'boot-stack key for use with nova VirtualPowerDriver' 2>&1 1>/dev/null
+
+cat $ISO_BUILD_DIR/openstack/content/virtual-power-key.pub >> ~/.ssh/authorized_keys
+
+cp $BASE/templates/meta_data.json $ISO_BUILD_DIR/openstack/latest/meta_data.json
+
+PUBLIC_SSH_KEY=$(cat ~/.ssh/id_rsa.pub)
+
+cat > $ISO_BUILD_DIR/openstack/latest/user_data << EOF
+#cloud-config
+runcmd:
+  - sed -i "s/\"stack\"/\"`whoami`\"/g" /var/lib/heat-cfntools/cfn-init-data
+  - echo "`cat $ISO_BUILD_DIR/openstack/content/virtual-power-key | base64 -w0`" | base64 --decode > /opt/stack/boot-stack/virtual-power-key
+  - echo "`cat $ISO_BUILD_DIR/openstack/content/virtual-power-key.pub`" > /opt/stack/boot-stack/virtual-power-key.pub
+EOF
+
+sed -i "s#%%PUBLIC_SSH_KEY%%#$PUBLIC_SSH_KEY#" $ISO_BUILD_DIR/openstack/latest/meta_data.json
+sed -i "s/%%UUID%%/`uuidgen`/" $ISO_BUILD_DIR/openstack/latest/meta_data.json
+
+ISO_PATH=$(mktemp /tmp/undercloud-config-drive-XXXXXX.iso)
+
+sudo mkisofs \
+    -o $ISO_PATH \
+    -ldots \
+    -allow-lowercase \
+    -allow-multidot \
+    -publisher "OpenStack TripleO" \
+    -J \
+    -r \
+    -V config-2 \
+    $ISO_BUILD_DIR
+
+rm -rf $ISO_BUILD_DIR
+
+echo "$ISO_PATH"

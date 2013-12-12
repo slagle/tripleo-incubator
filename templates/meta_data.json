@@ -1,0 +1,16 @@
+{
+   "availability_zone":"nova",
+   "files":[ ],
+   "hostname":"undercloud",
+   "launch_index":0,
+   "name":"undercloud",
+   "meta":{
+      "role":"undercloud",
+      "essential":"true",
+      "dsmode":"local"
+   },
+   "public_keys":{
+      "default":"%%PUBLIC_SSH_KEY%%"
+   },
+   "uuid":"%%UUID%%"
+}
