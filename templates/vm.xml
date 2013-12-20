@@ -38,6 +38,9 @@
     <memballoon model='virtio'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x07' function='0x0'/>
     </memballoon>
+    <console type='pty'>
+      <target port='0'/>
+    </console>
   </devices>
 </domain>
 
